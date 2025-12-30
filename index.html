@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cyberpunk Credit Card</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --neon-pink:#ff2fdc;
+  --neon-blue:#00f7ff;
+  --bg:#05010d;
+  --matrix-color:#00ff99;
+}
+
+* { box-sizing:border-box; font-family:'Orbitron',sans-serif; }
+
+body {
+  margin:0;
+  min-height:100vh;
+  display:grid;
+  place-items:center;
+  background:radial-gradient(circle at top,#12002a,var(--bg));
+  color:white;
+  overflow:hidden;
+}
+
+#matrix {
+  position:fixed;
+  inset:0;
+  z-index:0;
+  opacity:0.15;
+  filter:blur(0.6px);
+}
+
+.scene { perspective:1400px; z-index:1; position:relative; }
+
+.card {
+  width:360px;
+  aspect-ratio:1.586;
+  position:relative;
+  transform-style:preserve-3d;
+  transition:transform 1s cubic-bezier(.3,.1,.2,1);
+}
+
+.card.flip { transform:rotateY(180deg); }
+
+.card-front, .card-back {
+  position:absolute;
+  inset:0;
+  border-radius:18px;
+  backface-visibility:hidden;
+  padding:24px;
+  background: linear-gradient(135deg, rgba(255,255,255,.12), rgba(255,255,255,.04));
+  backdrop-filter:blur(14px);
+  border:1px solid rgba(255,255,255,.18);
+}
+
+.card-front {
+  box-shadow: 0 0 25px var(--neon-pink), inset 0 0 20px rgba(255,47,220,.4);
+}
+
+.chip { width:52px; height:38px; border-radius:6px; background:linear-gradient(135deg,#aaa,#777); }
+
+.card-number { margin-top:40px; font-size:18px; letter-spacing:3px; text-shadow:0 0 10px var(--neon-blue); }
+
+.card-name, .card-exp { position:absolute; bottom:22px; font-size:13px; opacity:.9; }
+.card-name { left:24px; text-transform:uppercase; }
+.card-exp { right:24px; }
+
+.card-back {
+  transform:rotateY(180deg);
+  box-shadow: 0 0 25px var(--neon-blue), inset 0 0 20px rgba(0,247,255,.4);
+}
+
+.strip { height:40px; background:#000; margin-top:24px; }
+.cvc { width:70%; margin:22px auto; background:#fff; color:#000; padding:8px; text-align:right; letter-spacing:3px; }
+
+form {
+  width:360px;
+  margin-top:36px;
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+  position:relative;
+  z-index:1;
+}
+
+input {
+  padding:14px;
+  border-radius:10px;
+  background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.15);
+  color:white;
+  outline:none;
+}
+
+input:focus {
+  border-color:var(--neon-blue);
+  box-shadow:0 0 10px var(--neon-blue);
+}
+</style>
+</head>
+<body>
+
+<canvas id="matrix"></canvas>
+
+<div class="scene">
+  <div class="card" id="card">
+    <div class="card-front">
+      <div class="chip"></div>
+      <div class="card-number" id="num">#### #### #### ####</div>
+      <div class="card-name" id="name">Card Owner</div>
+      <div class="card-exp" id="exp">MM/YY</div>
+    </div>
+    <div class="card-back">
+      <div class="strip"></div>
+      <div class="cvc" id="cvc">###</div>
+    </div>
+  </div>
+</div>
+
+<form>
+  <input id="iNum" placeholder="Card Number" maxlength="19">
+  <input id="iName" placeholder="Card Holder">
+  <input id="iExp" placeholder="MM/YY" maxlength="5">
+  <input id="iCvc" placeholder="CVC" maxlength="3">
+</form>
+
+<script>
+const card=document.getElementById("card");
+iNum.oninput=e=>{
+  let v=e.target.value.replace(/\D/g,'').replace(/(.{4})/g,'$1 ').trim();
+  e.target.value=v;
+  num.textContent=v||"#### #### #### ####";
+};
+iName.oninput=e=>name.textContent=e.target.value||"Card Owner";
+iExp.oninput=e=>{
+  let v=e.target.value.replace(/\D/g,'');
+  if(v.length>2)v=v.slice(0,2)+'/'+v.slice(2);
+  e.target.value=v;
+  exp.textContent=v||"MM/YY";
+};
+iCvc.onfocus=()=>card.classList.add("flip");
+iCvc.onblur=()=>card.classList.remove("flip");
+iCvc.oninput=e=>cvc.textContent=e.target.value||"###";
+
+const canvas=document.getElementById("matrix");
+const ctx=canvas.getContext("2d");
+let columns, drops;
+const fontSize=14;
+const letters="ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+
+function resize(){
+  canvas.width=window.innerWidth;
+  canvas.height=window.innerHeight;
+  columns=Math.floor(canvas.width/fontSize);
+  drops=Array(columns).fill(1);
+}
+resize();
+window.addEventListener("resize",resize);
+
+function drawMatrix(){
+  ctx.fillStyle="rgba(0,0,0,0.08)";
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+
+  ctx.fillStyle="#00ff99";
+  ctx.font=fontSize+"px monospace";
+
+  for(let i=0;i<drops.length;i++){
+    const text=letters[Math.floor(Math.random()*letters.length)];
+    ctx.fillText(text,i*fontSize,drops[i]*fontSize);
+    if(drops[i]*fontSize>canvas.height && Math.random()>0.975)drops[i]=0;
+    drops[i]++;
+  }
+}
+setInterval(drawMatrix,50);
+</script>
+
+</body>
+</html>
+
+
+
